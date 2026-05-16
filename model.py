@@ -25,7 +25,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from dataset import Multi30kDataset
-from train import greedy_decode
 
 import spacy
 # ══════════════════════════════════════════════════════════════════════
@@ -596,6 +595,7 @@ class Transformer(nn.Module):
         Returns:
             The fully translated English string, detokenized and clean.
         """
+        from train import greedy_decode
         self.eval()
         device = next(self.parameters()).device
         

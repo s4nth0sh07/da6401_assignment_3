@@ -296,7 +296,7 @@ def evaluate_bleu(
                         target_words.append(itos.get(idx, '<unk>'))
 
                 candidate_corpus.append(" ".join(pred_words))
-                references_corpus.append(" ".join([target_words]))
+                references_corpus.append(" ".join(target_words))
 
     final_bleu = bleu.list_bleu([references_corpus], candidate_corpus)
     
