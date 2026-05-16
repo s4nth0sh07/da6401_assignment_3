@@ -476,8 +476,8 @@ class Transformer(nn.Module):
 
     def __init__(
         self,
-        src_vocab_size: int,
-        tgt_vocab_size: int,
+        src_vocab_size: int = None,
+        tgt_vocab_size: int = None,
         d_model:   int   = 512,
         N:         int   = 6,
         num_heads: int   = 8,
@@ -502,7 +502,7 @@ class Transformer(nn.Module):
 
         if checkpoint_path is not None:
             if not os.path.exists(checkpoint_path):
-                gdown.download(id="1f1KS2GqK6DafQGm9nOzdEHXhM7cucssR", output=checkpoint_path, quiet=False)
+                gdown.download(id="1NVLYDuUnM_bd-HmCoDMBkxSByC3s6_vi", output=checkpoint_path, quiet=False)
             ckpt = torch.load(checkpoint_path, map_location="cpu")
             state = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
             self.load_state_dict(state)
