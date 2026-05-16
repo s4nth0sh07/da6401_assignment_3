@@ -361,7 +361,10 @@ def save_checkpoint(
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'scheduler_state_dict': scheduler.state_dict() if scheduler else None,
-        'model_config': model_config
+        'model_config': model_config,
+        'src_vocab': dict(model.src_vocab),
+        'tgt_vocab': dict(model.tgt_vocab),
+        'tgt_itos':  {v: k for k, v in model.tgt_vocab.items()}
     }, path)
 
 
