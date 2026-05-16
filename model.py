@@ -639,15 +639,16 @@ class Transformer(nn.Module):
         
         src_mask = make_src_mask(src_tensor, pad_idx=1).to(device)
         
-        tgt_indices = greedy_decode(
-            model=self,
-            src=src_tensor,
-            src_mask=src_mask,
-            max_len=100, 
-            start_symbol=SOS_IDX,
-            end_symbol=EOS_IDX,
-            device=device
-        )
+        with torch.no_grad():
+            tgt_indices = greedy_decode(
+                model=self,
+                src=src_tensor,
+                src_mask=src_mask,
+                max_len=100, 
+                start_symbol=SOS_IDX,
+                end_symbol=EOS_IDX,
+                device=device
+            )
         
         tgt_indices = tgt_indices.squeeze(0).tolist()[1:] 
         
