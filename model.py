@@ -501,6 +501,12 @@ class Transformer(nn.Module):
             
             src_vocab_size = state["src_embed.weight"].shape[0]
             tgt_vocab_size = state["tgt_embed.weight"].shape[0]
+
+            self.src_vocab = ckpt.get('src_stoi', ckpt.get('src_vocab', {}))
+            self.tgt_vocab = ckpt.get('tgt_stoi', ckpt.get('tgt_vocab', {}))
+            self.tgt_itos = ckpt.get('tgt_itos', {v: k for k, v in self.tgt_vocab.items()})
+
+
         self.d_model = d_model
         self.src_embed = nn.Embedding(src_vocab_size, d_model)
         self.tgt_embed = nn.Embedding(tgt_vocab_size, d_model)
@@ -645,13 +651,11 @@ class Transformer(nn.Module):
         
         tgt_indices = tgt_indices.squeeze(0).tolist()[1:] 
         
-        itos = self.tgt_vocab.get_itos() 
         translated_words = []
-        
         for idx in tgt_indices:
             if idx == EOS_IDX:
                 break
             if idx != 1:
-                translated_words.append(itos.get(idx, '<unk>'))
+                translated_words.append(self.tgt_itos.get(idx, '<unk>'))
             
         return " ".join(translated_words)
