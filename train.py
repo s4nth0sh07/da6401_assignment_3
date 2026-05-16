@@ -433,7 +433,7 @@ def run_training_experiment() -> None:
     # TODO: implement full experiment
     config = {
         'batch_size': 32, 
-        'num_epochs': 10,
+        'num_epochs': 25,
         'd_model': 512,
         'N': 6,
         'num_heads': 8,
