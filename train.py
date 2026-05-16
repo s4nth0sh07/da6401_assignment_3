@@ -20,7 +20,6 @@ import torch.nn as nn
 from torch.utils.data import DataLoader
 from typing import Optional
 import torch.nn.functional as F
-import bleu
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import wandb
@@ -298,6 +297,7 @@ def evaluate_bleu(
                 candidate_corpus.append(" ".join(pred_words))
                 references_corpus.append(" ".join(target_words))
 
+    import bleu
     final_bleu = bleu.list_bleu([references_corpus], candidate_corpus)
     
     return float(final_bleu)
