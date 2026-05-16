@@ -3,6 +3,7 @@ from datasets import load_dataset
 import spacy
 from torch.utils.data import Dataset, DataLoader
 from torch.nn.utils.rnn import pad_sequence
+import spacy.cli
 
 class VocabDict(dict):
     def get_itos(self):
@@ -27,7 +28,6 @@ class Multi30kDataset:
             self.spacy_en = spacy.load('en_core_web_sm')
         except OSError:
             print("Downloading missing spacy models...")
-            import spacy.cli
             spacy.cli.download('de_core_news_sm')
             spacy.cli.download('en_core_web_sm')
             self.spacy_de = spacy.load('de_core_news_sm')

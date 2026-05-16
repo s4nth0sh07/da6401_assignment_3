@@ -27,6 +27,7 @@ import torch.nn.functional as F
 from dataset import Multi30kDataset
 
 import spacy
+import spacy.cli
 # ══════════════════════════════════════════════════════════════════════
 #   STANDALONE ATTENTION FUNCTION  
 #    Exposed at module level so the autograder can import and test it
@@ -619,10 +620,9 @@ class Transformer(nn.Module):
             spacy_de = spacy.load('de_core_news_sm')
         except OSError:
             print("Downloading missing spacy model 'de_core_news_sm'...")
-            import spacy.cli
             spacy.cli.download('de_core_news_sm')
             spacy_de = spacy.load('de_core_news_sm')
-            
+
         if not hasattr(self, 'src_vocab') or not hasattr(self, 'tgt_vocab'):
              raise AttributeError(
                  "Model is missing vocabularies. "
