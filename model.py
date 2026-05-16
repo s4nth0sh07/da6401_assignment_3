@@ -618,8 +618,11 @@ class Transformer(nn.Module):
         try:
             spacy_de = spacy.load('de_core_news_sm')
         except OSError:
-            raise RuntimeError("Spacy model 'de_core_news_sm' is missing. Run: python -m spacy download de_core_news_sm")
-
+            print("Downloading missing spacy model 'de_core_news_sm'...")
+            import spacy.cli
+            spacy.cli.download('de_core_news_sm')
+            spacy_de = spacy.load('de_core_news_sm')
+            
         if not hasattr(self, 'src_vocab') or not hasattr(self, 'tgt_vocab'):
              raise AttributeError(
                  "Model is missing vocabularies. "

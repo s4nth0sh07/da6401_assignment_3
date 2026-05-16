@@ -26,10 +26,13 @@ class Multi30kDataset:
             self.spacy_de = spacy.load('de_core_news_sm')
             self.spacy_en = spacy.load('en_core_web_sm')
         except OSError:
-            print("Spacy models not found. Run these commands in your terminal:")
-            print("python -m spacy download en_core_web_sm")
-            print("python -m spacy download de_core_news_sm")
-            raise
+            print("Downloading missing spacy models...")
+            import spacy.cli
+            spacy.cli.download('de_core_news_sm')
+            spacy.cli.download('en_core_web_sm')
+            self.spacy_de = spacy.load('de_core_news_sm')
+            self.spacy_en = spacy.load('en_core_web_sm')
+        
         self.special_tokens = {
             '<unk>' : 0, '<pad>' : 1, "<sos>" : 2, "<eos>" : 3,
         }
