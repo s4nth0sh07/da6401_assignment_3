@@ -502,7 +502,7 @@ class Transformer(nn.Module):
 
         if checkpoint_path is not None:
             if not os.path.exists(checkpoint_path):
-                gdown.download(id="PUT_YOUR_REAL_DRIVE_FILE_ID_HERE", output=checkpoint_path, quiet=False)
+                gdown.download(id="1f1KS2GqK6DafQGm9nOzdEHXhM7cucssR", output=checkpoint_path, quiet=False)
             ckpt = torch.load(checkpoint_path, map_location="cpu")
             state = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
             self.load_state_dict(state)
