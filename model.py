@@ -25,9 +25,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from dataset import Multi30kDataset
-
-import spacy
-import spacy.cli
 # ══════════════════════════════════════════════════════════════════════
 #   STANDALONE ATTENTION FUNCTION  
 #    Exposed at module level so the autograder can import and test it
@@ -516,6 +513,17 @@ class Transformer(nn.Module):
         self.decoder = Decoder(decoder_layer, N)
         self.generator = nn.Linear(d_model, tgt_vocab_size)
 
+        import spacy
+        import subprocess
+        import sys
+        
+        try:
+            self.de_nlp = spacy.load("de_core_news_sm")
+        except OSError:
+            print("Downloading missing spacy model 'de_core_news_sm'...")
+            subprocess.check_call([sys.executable, "-m", "spacy", "download", "de_core_news_sm"])
+            self.de_nlp = spacy.load("de_core_news_sm")
+
         if checkpoint_path is not None:
             if not os.path.exists(checkpoint_path):
                 import gdown
@@ -616,20 +624,7 @@ class Transformer(nn.Module):
         self.eval()
         device = next(self.parameters()).device
         
-        try:
-            spacy_de = spacy.load('de_core_news_sm')
-        except OSError:
-            print("Downloading missing spacy model 'de_core_news_sm'...")
-            spacy.cli.download('de_core_news_sm')
-            spacy_de = spacy.load('de_core_news_sm')
-
-        if not hasattr(self, 'src_vocab') or not hasattr(self, 'tgt_vocab'):
-             raise AttributeError(
-                 "Model is missing vocabularies. "
-                 "In your main script, run `model.src_vocab = train_data.src_vocab` before calling infer()."
-             )
-
-        tokens = [tok.text.lower() for tok in spacy_de.tokenizer(src_sentence)]
+        tokens = [tok.text.lower() for tok in self.de_nlp.tokenizer(src_sentence)]
         
         SOS_IDX, EOS_IDX, UNK_IDX = 2, 3, 0
         src_indices = [SOS_IDX] + [self.src_vocab.get(tok, UNK_IDX) for tok in tokens] + [EOS_IDX]
