@@ -488,6 +488,21 @@ class Transformer(nn.Module):
         super().__init__()
         # TODO: Instantiate 
         # init should also load the model weights if checkpoint path provided, download the .pth file like this
+
+        # 1. Handle autograder inference where vocab sizes are None
+        if src_vocab_size is None or tgt_vocab_size is None:
+            if checkpoint_path is None:
+                checkpoint_path = "pretrained_checkpoint.pth"
+            
+            if not os.path.exists(checkpoint_path):
+                import gdown
+                gdown.download(id="1NVLYDuUnM_bd-HmCoDMBkxSByC3s6_vi", output=checkpoint_path, quiet=False)
+                
+            ckpt = torch.load(checkpoint_path, map_location="cpu")
+            state = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
+            
+            src_vocab_size = state["src_embed.weight"].shape[0]
+            tgt_vocab_size = state["tgt_embed.weight"].shape[0]
         self.d_model = d_model
         self.src_embed = nn.Embedding(src_vocab_size, d_model)
         self.tgt_embed = nn.Embedding(tgt_vocab_size, d_model)
@@ -502,6 +517,7 @@ class Transformer(nn.Module):
 
         if checkpoint_path is not None:
             if not os.path.exists(checkpoint_path):
+                import gdown
                 gdown.download(id="1NVLYDuUnM_bd-HmCoDMBkxSByC3s6_vi", output=checkpoint_path, quiet=False)
             ckpt = torch.load(checkpoint_path, map_location="cpu")
             state = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
