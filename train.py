@@ -483,6 +483,8 @@ def run_training_experiment() -> None:
         smoothing=config['smoothing']
     ).to(device)
 
+    best_val_loss = float('inf')
+    
     for epoch in range(1, config['num_epochs'] + 1):
         print(f"\n--- Epoch {epoch} ---")
         train_loss = run_epoch(train_loader, model, loss_fn, optimizer, scheduler, epoch, is_train=True, device=device)
@@ -494,11 +496,19 @@ def run_training_experiment() -> None:
         wandb.log({
             "epoch": epoch,
             "train_loss": train_loss, 
-            "val_loss": val_loss,
-            "learning_rate": optimizer.param_groups[0]['lr']
+            "val_loss": val_loss
         })
-        
-        save_checkpoint(model, optimizer, scheduler, epoch)
+
+        # 1. Save the best validation loss checkpoint
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            print(f"⭐ New best validation loss ({best_val_loss:.4f})! Saving best_model.pt...")
+            save_checkpoint(model, optimizer, scheduler, epoch, path="best_model.pt")
+
+        # 2. Save the final epoch checkpoint
+        if epoch == config['num_epochs']:
+            print(f"🏁 Final epoch reached! Saving last_model.pt...")
+            save_checkpoint(model, optimizer, scheduler, epoch, path="last_model.pt")
 
     bleu = evaluate_bleu(model, test_loader, train_data.tgt_vocab, device=device)
     print(f"Final Test BLEU Score: {bleu:.2f}")
