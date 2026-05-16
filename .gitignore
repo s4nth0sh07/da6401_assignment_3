@@ -1,0 +1,23 @@
+# Environments
+venv/
+env/
+.env
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyTorch Checkpoints & Data
+*.pt
+*.pth
+.data/
+data/
+
+# Weights & Biases logs
+wandb/
+
+# IDE & OS specific
+.vscode/
+.idea/
+.DS_Store

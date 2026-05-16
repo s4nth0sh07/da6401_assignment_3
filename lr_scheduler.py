@@ -40,8 +40,9 @@ class NoamScheduler(LRScheduler):
     ) -> None:
         # TODO: Store d_model and warmup_steps as instance attributes
         # TODO: Call the parent __init__
-        raise NotImplementedError
-
+        self.d_model = d_model
+        self.warmup_steps = warmup_steps
+        super().__init__(optimizer, last_epoch)
     # ------------------------------------------------------------------
     def _get_lr_scale(self) -> float:
         """
@@ -55,7 +56,13 @@ class NoamScheduler(LRScheduler):
             scale = d_model^(-0.5) * min(step^(-0.5), step * warmup_steps^(-1.5))
         """
         # TODO: Implement and return the Noam scale factor
-        raise NotImplementedError
+        step = self.last_epoch +1
+        temp = self.d_model ** -0.5
+        a = step ** -0.5
+        b = self.warmup_steps ** -1.5
+        scale = min(a, step * b)
+        scale = temp * scale
+        return scale
 
     # ------------------------------------------------------------------
     def get_lr(self) -> list[float]:
@@ -72,7 +79,9 @@ class NoamScheduler(LRScheduler):
             Access base learning rates via `self.base_lrs`.
         """
         # TODO: Return a list of scaled LRs, one per param group
-        raise NotImplementedError
+        scale = self._get_lr_scale()
+        res = [base_lr * scale for base_lr in self.base_lrs]
+        return res
 
 
 # ──────────────────────────────────────────────────────────────────────
