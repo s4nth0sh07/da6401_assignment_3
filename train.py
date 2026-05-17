@@ -435,15 +435,15 @@ def run_training_experiment() -> None:
     """
     # TODO: implement full experiment
     config = {
-        'batch_size': 32, 
-        'num_epochs': 25,
+        'batch_size': 128, 
+        'num_epochs': 40,
         'd_model': 512,
         'N': 6,
         'num_heads': 8,
         'd_ff': 2048,
-        'dropout': 0.1,
+        'dropout': 0.3,
         'smoothing': 0.1,
-        'warmup_steps': 4000
+        'warmup_steps': 1500
     }
     
     wandb.init(project="da6401-a3", config=config)
@@ -513,7 +513,7 @@ def run_training_experiment() -> None:
     
     print("\nLoading best_model.pt for final BLEU evaluation...")
     load_checkpoint("best_model.pt", model)
-    
+
     bleu = evaluate_bleu(model, test_loader, train_data.tgt_vocab, device=device)
     print(f"Final Test BLEU Score: {bleu:.2f}")
     
