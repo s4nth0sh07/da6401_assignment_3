@@ -506,6 +506,12 @@ class Transformer(nn.Module):
             self.tgt_vocab = ckpt.get('tgt_stoi', ckpt.get('tgt_vocab', {}))
             self.tgt_itos = ckpt.get('tgt_itos', {v: k for k, v in self.tgt_vocab.items()})
 
+            if "model_config" in ckpt:
+                d_model = ckpt["model_config"].get("d_model", d_model)
+                N = ckpt["model_config"].get("N", N)
+                num_heads = ckpt["model_config"].get("num_heads", num_heads)
+                d_ff = ckpt["model_config"].get("d_ff", d_ff)
+
 
         self.d_model = d_model
         self.src_embed = nn.Embedding(src_vocab_size, d_model)
