@@ -436,14 +436,14 @@ def run_training_experiment() -> None:
     # TODO: implement full experiment
     config = {
         'batch_size': 128, 
-        'num_epochs': 40,
+        'num_epochs': 70,
         'd_model': 512,
         'N': 6,
         'num_heads': 8,
         'd_ff': 2048,
-        'dropout': 0.3,
+        'dropout': 0.1,
         'smoothing': 0.1,
-        'warmup_steps': 1500
+        'warmup_steps': 4000
     }
     
     wandb.init(project="da6401-a3", config=config)
@@ -472,7 +472,11 @@ def run_training_experiment() -> None:
     
     model.src_vocab = train_data.src_vocab
     model.tgt_vocab = train_data.tgt_vocab
-
+    
+    for p in model.parameters():
+        if p.dim() > 1:
+            nn.init.xavier_uniform_(p)
+            
     optimizer = optim.Adam(model.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
     
     scheduler = NoamScheduler(optimizer, config['d_model'], config['warmup_steps'])
