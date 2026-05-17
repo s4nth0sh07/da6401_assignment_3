@@ -435,15 +435,15 @@ def run_training_experiment() -> None:
     """
     # TODO: implement full experiment
     config = {
-        'batch_size': 32, 
-        'num_epochs': 50,
+        'batch_size': 128, 
+        'num_epochs': 40,
         'd_model': 512,
         'N': 6,
         'num_heads': 8,
         'd_ff': 2048,
-        'dropout': 0.1,
+        'dropout': 0.3,
         'smoothing': 0.1,
-        'warmup_steps': 4000
+        'warmup_steps': 1500
     }
     
     wandb.init(project="da6401-a3", config=config)
