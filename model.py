@@ -511,6 +511,9 @@ class Transformer(nn.Module):
                 N = ckpt["model_config"].get("N", N)
                 num_heads = ckpt["model_config"].get("num_heads", num_heads)
                 d_ff = ckpt["model_config"].get("d_ff", d_ff)
+            
+            if "encoder.layers.0.feed_forward.linear1.bias" in state:
+                d_ff = state["encoder.layers.0.feed_forward.linear1.bias"].shape[0]
 
 
         self.d_model = d_model
