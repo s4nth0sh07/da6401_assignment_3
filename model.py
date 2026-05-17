@@ -494,7 +494,7 @@ class Transformer(nn.Module):
             
             if not os.path.exists(checkpoint_path):
                 import gdown
-                gdown.download(id="1Tjo6KcrLE-ieKLFArDEdkBhLCMXF3NEb", output=checkpoint_path, quiet=False)
+                gdown.download(id="1dZ4AksXrBmrBLa5uo-UnGWz7Jv307dpS", output=checkpoint_path, quiet=False)
                 
             ckpt = torch.load(checkpoint_path, map_location="cpu")
             state = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
@@ -533,7 +533,7 @@ class Transformer(nn.Module):
         if checkpoint_path is not None:
             if not os.path.exists(checkpoint_path):
                 import gdown
-                gdown.download(id="1Tjo6KcrLE-ieKLFArDEdkBhLCMXF3NEb", output=checkpoint_path, quiet=False)
+                gdown.download(id="1dZ4AksXrBmrBLa5uo-UnGWz7Jv307dpS", output=checkpoint_path, quiet=False)
             ckpt = torch.load(checkpoint_path, map_location="cpu")
             state = ckpt["model_state_dict"] if "model_state_dict" in ckpt else ckpt
             self.load_state_dict(state)

@@ -513,7 +513,6 @@ def run_training_experiment() -> None:
     
     print("\nLoading best_model.pt for final BLEU evaluation...")
     load_checkpoint("best_model.pt", model)
-
     bleu = evaluate_bleu(model, test_loader, train_data.tgt_vocab, device=device)
     print(f"Final Test BLEU Score: {bleu:.2f}")
     
