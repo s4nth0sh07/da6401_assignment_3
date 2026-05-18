@@ -241,64 +241,63 @@ def evaluate_bleu(
     candidate_corpus = []
     references_corpus = []
     
-    SOS_IDX = 2
+    SOS_IDX =2
     EOS_IDX = 3
+    PAD_IDX= 1
     
-    # Get the reverse lookup dictionary (Integers -> Strings)
-    itos = tgt_vocab.get_itos()
+    itos =tgt_vocab.get_itos()
 
     print("Evaluating BLEU Score on Test Set...")
     with torch.no_grad():
         for batch in test_dataloader:
-            src = batch['src'].to(device)
+            src= batch['src'].to(device)
             tgt = batch['tgt'].to(device)
             
-            # Create the source mask
-            # Make sure make_src_mask is imported from model.py!
-            src_mask = make_src_mask(src, pad_idx=1).to(device)
+            src_mask= make_src_mask(src, pad_idx=PAD_IDX).to(device)
+            
+            temp_batch_size= src.size(0)
 
-            for i in range(src.size(0)):
-                # Extract the single source sentence and add a dummy batch dimension [1, seq_len]
+            for i in range(temp_batch_size):
                 single_src = src[i].unsqueeze(0)
-                single_src_mask = src_mask[i].unsqueeze(0)
+                single_src_mask =src_mask[i].unsqueeze(0)
                 
-                # 1. Generate the prediction using greedy_decode
-                pred_indices = greedy_decode(
-                    model, 
-                    single_src, 
-                    single_src_mask, 
-                    max_len, 
-                    SOS_IDX, 
-                    EOS_IDX, 
-                    device
-                )
+                temp_decode_args= (model, single_src, single_src_mask)
+                temp_decode_kwargs = {
+                    'max_len': max_len,
+                    'start_symbol': SOS_IDX,
+                    'end_symbol': EOS_IDX,
+                    'device': device,
+                }
+                pred_indices =greedy_decode(*temp_decode_args, **temp_decode_kwargs)
                 
-                # 2. Squeeze the prediction and target to 1D lists
-                # Drop the first token (<sos>) for both
-                pred_list = pred_indices.squeeze(0).tolist()[1:]
-                target_list = tgt[i].tolist()[1:]
+                temp_pred_flat =pred_indices.squeeze(0).tolist()
+                temp_target_flat= tgt[i].tolist()
+                pred_list= temp_pred_flat[1:]
+                target_list= temp_target_flat[1:]
                 
-                # 3. Convert integers to string words
-                pred_words = []
+                pred_words= []
                 for idx in pred_list:
-                    if idx == EOS_IDX:
-                         break
-                    # The Solution: Use itos.get() and default to '<unk>' if not found
-                    pred_words.append(itos.get(idx, '<unk>')) 
+                    if idx== EOS_IDX:
+                        break
+                    temp_word= itos.get(idx, '<unk>')
+                    pred_words.append(temp_word)
 
                 target_words = []
                 for idx in target_list:
-                    if idx == EOS_IDX:
+                    if idx ==EOS_IDX:
                         break
-                    # The Solution: Filter out padding, then lookup the string
-                    if idx != 1:
-                        target_words.append(itos.get(idx, '<unk>'))
+                    if idx == PAD_IDX:
+                        continue
+                    temp_word = itos.get(idx, '<unk>')
+                    target_words.append(temp_word)
 
-                candidate_corpus.append(" ".join(pred_words))
-                references_corpus.append(" ".join(target_words))
+                temp_pred_sentence= " ".join(pred_words)
+                temp_target_sentence = " ".join(target_words)
+                candidate_corpus.append(temp_pred_sentence)
+                references_corpus.append(temp_target_sentence)
 
     import bleu
-    final_bleu = bleu.list_bleu([references_corpus], candidate_corpus)
+    final_bleu= bleu.list_bleu([references_corpus], candidate_corpus)
     
     return float(final_bleu)
 
@@ -538,7 +537,7 @@ def run_training_experiment() -> None:
     print(f"Final Test BLEU Score: {bleu:.2f}")
 
     wandb.log({'test_bleu': bleu})
-    
+
     wandb.finish()
 
 
