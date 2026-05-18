@@ -446,80 +446,97 @@ def run_training_experiment() -> None:
         'warmup_steps': 4000
     }
     
-    wandb.init(project="da6401-a3", config=config)
+    PAD_IDX = 1
     
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    wandb.init(project = "da6401-a3", config = config)
+    
+    device= "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Training on device: {device}")
 
     print("Initializing datasets...")
-    train_data = Multi30kDataset(split='train')
-    val_data = Multi30kDataset(split='validation', src_vocab=train_data.src_vocab, tgt_vocab=train_data.tgt_vocab)
-    test_data = Multi30kDataset(split='test', src_vocab=train_data.src_vocab, tgt_vocab=train_data.tgt_vocab)
-
-    train_loader = DataLoader(train_data, batch_size=config['batch_size'], shuffle=True, collate_fn=collate_fn)
-    val_loader = DataLoader(val_data, batch_size=config['batch_size'], shuffle=False, collate_fn=collate_fn)
-    test_loader = DataLoader(test_data, batch_size=config['batch_size'], shuffle=False, collate_fn=collate_fn)
-
-    model = Transformer(
-        src_vocab_size=len(train_data.src_vocab),
-        tgt_vocab_size=len(train_data.tgt_vocab),
-        d_model=config['d_model'],
-        N=config['N'],
-        num_heads=config['num_heads'],
-        d_ff=config['d_ff'],
-        dropout=config['dropout']
-    ).to(device)
+    train_data = Multi30kDataset(split = 'train')
     
-    model.src_vocab = train_data.src_vocab
-    model.tgt_vocab = train_data.tgt_vocab
+    temp_shared_vocab_kwargs= {
+        'src_vocab': train_data.src_vocab,
+        'tgt_vocab': train_data.tgt_vocab,
+    }
+    val_data =Multi30kDataset(split = 'validation', **temp_shared_vocab_kwargs)
+    test_data = Multi30kDataset(split = 'test', **temp_shared_vocab_kwargs)
+
+    temp_loader_common_kwargs= {
+        'batch_size': config['batch_size'],
+        'collate_fn': collate_fn,
+    }
+    train_loader =DataLoader(train_data, shuffle=True, **temp_loader_common_kwargs)
+    val_loader =DataLoader(val_data, shuffle=False, **temp_loader_common_kwargs)
+    test_loader= DataLoader(test_data, shuffle=False, **temp_loader_common_kwargs)
+
+    temp_model_kwargs = {
+        'src_vocab_size': len(train_data.src_vocab),
+        'tgt_vocab_size': len(train_data.tgt_vocab),
+        'd_model': config['d_model'],
+        'N': config['N'],
+        'num_heads': config['num_heads'],
+        'd_ff': config['d_ff'],
+        'dropout': config['dropout'],
+    }
+    model =Transformer(**temp_model_kwargs).to(device)
+    
+    model.src_vocab= train_data.src_vocab
+    model.tgt_vocab= train_data.tgt_vocab
     
     for p in model.parameters():
         if p.dim() > 1:
             nn.init.xavier_uniform_(p)
-            
-    optimizer = optim.Adam(model.parameters(), lr=1.0, betas=(0.9, 0.98), eps=1e-9)
     
-    scheduler = NoamScheduler(optimizer, config['d_model'], config['warmup_steps'])
+    temp_adam_kwargs ={
+        'lr': 1.0,
+        'betas': (0.9, 0.98),
+        'eps': 1e-9,
+    }
+    optimizer = optim.Adam(model.parameters(), **temp_adam_kwargs)
     
-    loss_fn = LabelSmoothingLoss(
-        vocab_size=len(train_data.tgt_vocab), 
-        pad_idx=1, 
-        smoothing=config['smoothing']
-    ).to(device)
+    scheduler=NoamScheduler(optimizer, config['d_model'], config['warmup_steps'])
+    
+    temp_loss_kwargs = {
+        'vocab_size': len(train_data.tgt_vocab),
+        'pad_idx': PAD_IDX,
+        'smoothing': config['smoothing'],
+    }
+    loss_fn =LabelSmoothingLoss(**temp_loss_kwargs).to(device)
 
     best_val_loss = float('inf')
     
     for epoch in range(1, config['num_epochs'] + 1):
         print(f"\n--- Epoch {epoch} ---")
-        train_loss = run_epoch(train_loader, model, loss_fn, optimizer, scheduler, epoch, is_train=True, device=device)
+        temp_train_args = (train_loader, model, loss_fn, optimizer, scheduler, epoch)
+        temp_train_kwargs = {'is_train': True, 'device': device}
+        train_loss = run_epoch(*temp_train_args, **temp_train_kwargs)
         print(f"Train Loss: {train_loss:.4f}")
-        
-        val_loss = run_epoch(val_loader, model, loss_fn, None, None, epoch, is_train=False, device=device)
+        temp_val_args = (val_loader, model, loss_fn, None, None, epoch)
+        temp_val_kwargs = {'is_train': False, 'device': device}
+        val_loss = run_epoch(*temp_val_args, **temp_val_kwargs)
         print(f"Val Loss: {val_loss:.4f}")
         
-        wandb.log({
+        temp_log_payload={
             "epoch": epoch,
-            "train_loss": train_loss, 
-            "val_loss": val_loss
-        })
-
-        # 1. Save the best validation loss checkpoint
+            "train_loss": train_loss,
+            "val_loss": val_loss,
+        }
+        wandb.log(temp_log_payload)
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            print(f"⭐ New best validation loss ({best_val_loss:.4f})! Saving best_model.pt...")
+            print(f"New best validation loss ({best_val_loss:.4f}). Saving best_model.pt...")
             save_checkpoint(model, optimizer, scheduler, epoch, path="best_model.pt")
-
-        # 2. Save the final epoch checkpoint
-        if epoch == config['num_epochs']:
-            print(f"🏁 Final epoch reached! Saving last_model.pt...")
+        if epoch ==config['num_epochs']:
+            print(f"Final epoch reached. Saving last_model.pt...")
             save_checkpoint(model, optimizer, scheduler, epoch, path="last_model.pt")
 
-    
     print("\nLoading best_model.pt for final BLEU evaluation...")
     load_checkpoint("best_model.pt", model)
     bleu = evaluate_bleu(model, test_loader, train_data.tgt_vocab, device=device)
     print(f"Final Test BLEU Score: {bleu:.2f}")
-    
+
     wandb.log({'test_bleu': bleu})
     
     wandb.finish()
