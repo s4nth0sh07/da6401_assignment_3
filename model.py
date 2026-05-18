@@ -637,35 +637,41 @@ class Transformer(nn.Module):
         """
         from train import greedy_decode
         self.eval()
-        device = next(self.parameters()).device
         
-        tokens = [tok.text.lower() for tok in self.de_nlp.tokenizer(src_sentence)]
+        temp_device =next(self.parameters()).device
+        SOS_IDX, EOS_IDX, UNK_IDX, PAD_IDX = 2, 3, 0, 1
+        MAX_LEN = 100
         
-        SOS_IDX, EOS_IDX, UNK_IDX = 2, 3, 0
-        src_indices = [SOS_IDX] + [self.src_vocab.get(tok, UNK_IDX) for tok in tokens] + [EOS_IDX]
+        temp_tokenized= self.de_nlp.tokenizer(src_sentence)
+        temp_tokens= [tok.text.lower() for tok in temp_tokenized]
         
-        src_tensor = torch.tensor(src_indices, dtype=torch.long).unsqueeze(0).to(device)
+        temp_token_ids=[self.src_vocab.get(tok, UNK_IDX) for tok in temp_tokens]
+        temp_src_indices =[SOS_IDX] + temp_token_ids + [EOS_IDX]
         
-        src_mask = make_src_mask(src_tensor, pad_idx=1).to(device)
+        temp_src_tensor =torch.tensor(temp_src_indices, dtype=torch.long).unsqueeze(0).to(temp_device)
+        temp_src_mask =make_src_mask(temp_src_tensor, pad_idx=PAD_IDX).to(temp_device)
+        
+        temp_decode_args = (self, temp_src_tensor, temp_src_mask)
+        temp_decode_kwargs = {
+            "max_len": MAX_LEN,
+            "start_symbol": SOS_IDX,
+            "end_symbol": EOS_IDX,
+            "device": temp_device,
+        }
         
         with torch.no_grad():
-            tgt_indices = greedy_decode(
-                model=self,
-                src=src_tensor,
-                src_mask=src_mask,
-                max_len=100, 
-                start_symbol=SOS_IDX,
-                end_symbol=EOS_IDX,
-                device=device
-            )
+            temp_output_tensor =greedy_decode(*temp_decode_args, **temp_decode_kwargs)
         
-        tgt_indices = tgt_indices.squeeze(0).tolist()[1:] 
+        temp_output_ids=temp_output_tensor.squeeze(0).tolist()
+        temp_tgt_indices = temp_output_ids[1:]
         
-        translated_words = []
-        for idx in tgt_indices:
-            if idx == EOS_IDX:
+        translated_words= []
+        for idx in temp_tgt_indices:
+            if idx ==EOS_IDX:
                 break
-            if idx != 1:
-                translated_words.append(self.tgt_itos.get(idx, '<unk>'))
-            
+            if idx == PAD_IDX:
+                continue
+            temp_word=self.tgt_itos.get(idx, '<unk>')
+            translated_words.append(temp_word)
+        
         return " ".join(translated_words)
