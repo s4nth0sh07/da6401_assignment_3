@@ -352,7 +352,7 @@ def save_checkpoint(
         'd_model': model.d_model,
         'N': N,
         'num_heads': 8,   
-        'd_ff': 2048,
+        'd_ff': 512,
         'dropout': 0.1
     }
 
